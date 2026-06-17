@@ -1,137 +1,122 @@
-import pandas as pd
-
-DELETED = "__DELETED__"
-
-
-class Numerik:
-    def __init__(self, id):
-        self.id = id
-
-    def __repr__(self):
-        return f"[ID: {self.id}]"
-
+import random
 
 class HashTable:
-    def __init__(self, size=211):
-        self.size = size
-        self.table = [None] * self.size
+    def __init__(self, size):
+        self.table_size = size
+        # Membuat array berisi list kosong untuk menampung chaining [[key, value], ...]
+        self.table = [[] for _ in range(self.table_size)]
 
-    # Fungsi hash
-    def hash_function(self, key):
-        return key % self.size
+    # Fungsi Hash menggunakan modulo
+    def _hash_function(self, key):
+        return key % self.table_size
 
-    # Insert data
-    def insert(self, key):
-        index = self.hash_function(key)
-        original_index = index
-
-        while self.table[index] is not None:
-            if self.table[index] == key:
-                print(f"Data {key} sudah ada!")
+    # 1. INPUT DATA
+    def insert(self, key, value):
+        index = self._hash_function(key)
+        
+        # Cek jika key sudah ada di dalam chain, jika ada maka update nilainya
+        for item in self.table[index]:
+            if item[0] == key:
+                item[1] = value
+                print(f"Data dengan key {key} berhasil diupdate pada indeks {index}.")
                 return
+        
+        # Jika belum ada, tambahkan pasangan [key, value] baru ke dalam list (Separate Chaining)
+        self.table[index].append([key, value])
+        
+        # Deteksi collision (jika isi list di indeks tersebut lebih dari 1)
+        if len(self.table[index]) > 1:
+            print(f"Data {key} masuk ke indeks {index} (Terjadi Collision! Ditangani dengan Separate Chaining).")
+        else:
+            print(f"Data {key} berhasil dimasukkan ke indeks {index}.")
 
-            # Linear Probing
-            index = (index + 1) % self.size
-
-            # Jika tabel penuh
-            if index == original_index:
-                print("Hash Table penuh!")
-                return
-
-        self.table[index] = key
-        print(f"Data {key} berhasil ditambahkan.")
-
-    # Search data
-    def search(self, key):
-        index = self.hash_function(key)
-        original_index = index
-
-        while self.table[index] is not None:
-            if self.table[index] != DELETED and self.table[index] == key:
-                return index
-
-            index = (index + 1) % self.size
-
-            if index == original_index:
-                break
-
-        return -1
-
-    # Delete data (tombstone untuk linear probing)
+    # 2. HAPUS DATA
     def delete(self, key):
-        position = self.search(key)
+        index = self._hash_function(key)
+        for item in self.table[index]:
+            if item[0] == key:
+                self.table[index].remove(item)
+                print(f"Data dengan key {key} berhasil dihapus dari indeks {index}.")
+                return
+        print(f"Gagal: Data dengan key {key} tidak ditemukan!")
 
-        if position == -1:
-            print(f"Data {key} tidak ditemukan.")
-            return
+    # 3. CARI DATA
+    def search(self, key):
+        index = self._hash_function(key)
+        for item in self.table[index]:
+            if item[0] == key:
+                print(f"Data Ditemukan! Key: {key}, Value: {item[1]} (Berada di indeks {index})")
+                return
+        print(f"Hasil: Data dengan key {key} tidak ditemukan!")
 
-        self.table[position] = DELETED
-        print(f"Data {key} berhasil dihapus.")
-
-    # Display table
+    # Menampilkan visualisasi Hash Table beserta rantainya
     def display(self):
-        print("\nIsi Hash Table:")
-        for i, value in enumerate(self.table):
-            if value is not None and value != DELETED:
-                print(f"Index {i} : {value}")
+        print("\n--- Visualisasi Hash Table ---")
+        for i in range(self.table_size):
+            if self.table[i]:
+                # Menggabungkan data chain menjadi bentuk visual [k:v] -> [k:v]
+                chain = " -> ".join([f"[{item[0]} : {item[1]}]" for item in self.table[i]])
+                print(f"Indeks {i}: {chain} -> None")
+            else:
+                print(f"Indeks {i}: None")
+        print("------------------------------\n")
 
-    def load_data(self, path):
-        if path.endswith('.csv'):
-            df = pd.read_csv(path)
+
+def main():
+    # Menggunakan ukuran tabel 41 (Angka prima agar sebaran data bagus)
+    # Dengan 100 data, rata-rata setiap indeks akan terisi 2-3 data (terjadi collision sehat)
+    ukuran_tabel = 41
+    ht = HashTable(ukuran_tabel)
+
+    # -------------------------------------------------------------
+    # PROSES OTOMATIS: GENERATE 100 DATA RANDOM UNIK SAAT START-UP
+    # -------------------------------------------------------------
+    # random.sample mengambil 100 angka acak unik dari rentang 1-1000 secara instan
+    angka_unik = random.sample(range(1, 1001), 100)
+
+    print("Memulai program... Menginputkan 100 data random awal secara otomatis:\n")
+    for angka in angka_unik:
+        ht.insert(angka, f"Nilai-{angka}")
+    print("\n=== 100 Data awal berhasil dimasukkan ke dalam Hash Table! ===\n")
+    # -------------------------------------------------------------
+
+    # Menu Interaktif
+    while True:
+        print("=== MENU HASH TABLE (PYTHON) ===")
+        print("1. Input Data Baru")
+        print("2. Hapus Data")
+        print("3. Cari Data")
+        print("4. Tampilkan Tabel (Visualisasi Chain)")
+        print("5. Keluar")
+        
+        pilihan = input("Pilih menu: ")
+        
+        if pilihan == '1':
+            try:
+                key = int(input("Masukkan Key (Angka): "))
+                value = input("Masukkan Value (String): ")
+                ht.insert(key, value)
+            except ValueError:
+                print("Input tidak valid! Key harus berupa angka.")
+        elif pilihan == '2':
+            try:
+                key = int(input("Masukkan Key yang ingin dihapus: "))
+                ht.delete(key)
+            except ValueError:
+                print("Input tidak valid! Key harus berupa angka.")
+        elif pilihan == '3':
+            try:
+                key = int(input("Masukkan Key yang ingin dicari: "))
+                ht.search(key)
+            except ValueError:
+                print("Input tidak valid! Key harus berupa angka.")
+        elif pilihan == '4':
+            ht.display()
+        elif pilihan == '5':
+            print("Program selesai. Sampai jumpa!")
+            break
         else:
-            df = pd.read_excel(path)
+            print("Pilihan tidak valid! Silakan masukkan angka 1-5.")
 
-        for _, row in df.iterrows():
-            self.insert(int(row['id']))
-
-hash_table = HashTable()
-
-print("\n100 data random berhasil dimasukkan ke hash table!")
-
-# Menu Program
-while True:
-    print("\n===== MENU =====")
-    print("1. Input Data")
-    print("2. Hapus Data")
-    print("3. Cari Data")
-    print("4. Tampilkan Data")
-    print("5. Load Data Dari File (.csv)")
-    print("6. Keluar")
-
-    choice = input("Pilih menu: ")
-
-    if choice == "1":
-        data = int(input("Masukkan angka: "))
-        hash_table.insert(data)
-
-    elif choice == "2":
-        data = int(input("Masukkan angka yang ingin dihapus: "))
-        hash_table.delete(data)
-
-    elif choice == "3":
-        data = int(input("Masukkan angka yang dicari: "))
-        result = hash_table.search(data)
-
-        if result != -1:
-            print(f"Data ditemukan pada index {result}")
-        else:
-            print("Data tidak ditemukan")
-
-    elif choice == "4":
-        hash_table.display()
-
-    elif choice == "5":
-        # Memuat data dari file CSV atau Excel
-        filename = input("Masukkan nama file (contoh: data_barang.csv): ")
-        try:
-            hash_table.load_data(filename)
-            print(f"Data dari {filename} berhasil dimuat!")
-        except Exception as e:
-            print(f"Gagal memuat file: {e}")
-
-    elif choice == "6":
-        print("Program selesai.")
-        break
-
-    else:
-        print("Pilihan tidak valid!")
+if __name__ == "__main__":
+    main()

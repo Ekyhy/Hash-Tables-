@@ -1,194 +1,170 @@
+import java.util.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Scanner;
+// Struktur untuk menyimpan pasangan Key dan Value
+class HashNode {
+    int key;
+    String value;
+
+    public HashNode(int key, String value) {
+        this.key = key;
+        this.value = value;
+    }
+}
 
 class HashTable {
+    private int TABLE_SIZE;
+    private LinkedList<HashNode>[] table;
 
-    private final int SIZE = 211;
-    private Integer[] table;
-    private final Integer DELETED = Integer.MIN_VALUE;
-
-    public HashTable() {
-        table = new Integer[SIZE];
+    // Inisialisasi Hash Table dengan array of LinkedList
+    @SuppressWarnings("unchecked")
+    public HashTable(int size) {
+        this.TABLE_SIZE = size;
+        table = new LinkedList[TABLE_SIZE];
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            table[i] = new LinkedList<>();
+        }
     }
 
-    // Fungsi hash
+    // Fungsi Hash sederhana menggunakan modulo
     private int hashFunction(int key) {
-        return key % SIZE;
+        return key % TABLE_SIZE;
     }
 
-    // Insert data
-    public void insert(int key) {
+    // 1. INPUT DATA
+    public void insert(int key, String value) {
         int index = hashFunction(key);
-        int originalIndex = index;
-
-        while (table[index] != null && table[index] != DELETED) {
-
-            if (table[index] == key) {
-                System.out.println("Data " + key + " sudah ada!");
-                return;
-            }
-
-            // Linear probing
-            index = (index + 1) % SIZE;
-
-            if (index == originalIndex) {
-                System.out.println("Hash Table penuh!");
+        
+        // Cek apakah key sudah ada, jika ada update valuenya
+        for (HashNode node : table[index]) {
+            if (node.key == key) {
+                node.value = value;
+                System.out.println("Data dengan key " + key + " berhasil diupdate pada indeks " + index);
                 return;
             }
         }
-
-        table[index] = key;
-        System.out.println("Data " + key + " berhasil ditambahkan.");
-    }
-
-    // Search data
-    public int search(int key) {
-        int index = hashFunction(key);
-        int originalIndex = index;
-
-        while (table[index] != null) {
-
-            if (table[index] != DELETED && table[index] == key) {
-                return index;
-            }
-
-            index = (index + 1) % SIZE;
-
-            if (index == originalIndex) {
-                break;
-            }
+        
+        // Jika belum ada, tambahkan node baru ke dalam LinkedList (Separate Chaining)
+        table[index].add(new HashNode(key, value));
+        
+        // Mengecek apakah terjadi collision (jika ukuran LinkedList > 1)
+        if (table[index].size() > 1) {
+            System.out.println("Data dimasukkan ke indeks " + index + " (Terjadi Collision! Ditangani dengan Separate Chaining).");
+        } else {
+            System.out.println("Data berhasil dimasukkan ke indeks " + index);
         }
-
-        return -1;
     }
 
-    // Delete data
+    // 2. HAPUS DATA
     public void delete(int key) {
-        int position = search(key);
-
-        if (position == -1) {
-            System.out.println("Data " + key + " tidak ditemukan.");
-            return;
+        int index = hashFunction(key);
+        for (HashNode node : table[index]) {
+            if (node.key == key) {
+                table[index].remove(node);
+                System.out.println("Data dengan key " + key + " berhasil dihapus dari indeks " + index);
+                return;
+            }
         }
-
-        table[position] = DELETED;
-        System.out.println("Data " + key + " berhasil dihapus.");
+        System.out.println("Gagal: Data dengan key " + key + " tidak ditemukan!");
     }
 
-    // Display data
+    // 3. CARI DATA
+    public void search(int key) {
+        int index = hashFunction(key);
+        for (HashNode node : table[index]) {
+            if (node.key == key) {
+                System.out.println("Data Ditemukan! Key: " + key + ", Value: " + node.value + " (Berada di indeks " + index + ")");
+                return;
+            }
+        }
+        System.out.println("Hasil: Data dengan key " + key + " tidak ditemukan!");
+    }
+
+    // Menampilkan isi Hash Table untuk melihat Chaining
     public void display() {
-        System.out.println("\nIsi Hash Table:");
-
-        for (int i = 0; i < SIZE; i++) {
-
-            if (table[i] != null && table[i] != DELETED) {
-                System.out.println("Index " + i + " : " + table[i]);
+        System.out.println("\n--- Visualisasi Hash Table ---");
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            System.out.print("Indeks " + i + ": ");
+            for (HashNode node : table[i]) {
+                System.out.print("[" + node.key + " : " + node.value + "] -> ");
             }
+            System.out.println("null");
         }
-    }
-
-    // Load data dari CSV
-    public void loadData(String path) {
-
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-
-            String line;
-
-            // Skip header
-            br.readLine();
-
-            while ((line = br.readLine()) != null) {
-
-                String[] values = line.split(",");
-
-                int id = Integer.parseInt(values[0].trim());
-
-                insert(id);
-            }
-
-            System.out.println("Data dari file berhasil dimuat!");
-
-        } catch (IOException e) {
-            System.out.println("Gagal membaca file: " + e.getMessage());
-        }
+        System.out.println("------------------------------\n");
     }
 }
 
 public class Main {
-
     public static void main(String[] args) {
+        // Mengubah ukuran tabel menjadi 101 (angka prima agar distribusi hash bagus)
+        // Jika Anda ingin sengaja melihat BANYAK collision, Anda bisa ubah ke 20 atau 30.
+        int ukuranTabel = 101; 
+        HashTable ht = new HashTable(ukuranTabel); 
+        
+        // -------------------------------------------------------------
+        // PROSES OTOMATIS: GENERATE 100 DATA RANDOM UNIK SAAT START-UP
+        // -------------------------------------------------------------
+        Set<Integer> angkaUnik = new HashSet<>();
+        Random random = new Random();
+        
+        // Loop akan berjalan sampai HashSet benar-benar berisi 100 angka berbeda
+        while (angkaUnik.size() < 100) {
+            // Men-generate angka acak antara 1 sampai 1000
+            int angkaRandom = random.nextInt(1000) + 1; 
+            angkaUnik.add(angkaRandom); // Jika angka sudah ada, HashSet otomatis menolak
+        }
+        
+        // Masukkan 100 angka unik yang sudah digenerate ke dalam Hash Table
+        System.out.println("Memulai program... Menginputkan 100 data random awal secara otomatis:");
+        for (int angka : angkaUnik) {
+            // Menggunakan nilai angka sebagai Key, dan String sebagai Valuenya
+            ht.insert(angka, "Nilai-" + angka); 
+        }
+        System.out.println("=== 100 Data awal berhasil diinputkan! ===\n");
+        // -------------------------------------------------------------
 
-        Scanner input = new Scanner(System.in);
+        // Menu Interaktif
+        Scanner scanner = new Scanner(System.in);
+        int pilihan = 0;
 
-        HashTable hashTable = new HashTable();
-
-        System.out.println("===== PROGRAM HASH TABLE =====");
-
-        while (true) {
-
-            System.out.println("\n===== MENU =====");
-            System.out.println("1. Input Data");
+        while (pilihan != 5) {
+            System.out.println("=== MENU HASH TABLE ===");
+            System.out.println("1. Input Data Baru");
             System.out.println("2. Hapus Data");
             System.out.println("3. Cari Data");
-            System.out.println("4. Tampilkan Data");
-            System.out.println("5. Load Data Dari CSV");
-            System.out.println("6. Keluar");
-
+            System.out.println("4. Tampilkan Tabel (Visualisasi Chain)");
+            System.out.println("5. Keluar");
             System.out.print("Pilih menu: ");
-            int choice = input.nextInt();
+            pilihan = scanner.nextInt();
 
-            switch (choice) {
-
+            switch (pilihan) {
                 case 1:
-                    System.out.print("Masukkan angka: ");
-                    int insertData = input.nextInt();
-                    hashTable.insert(insertData);
+                    System.out.print("Masukkan Key (Angka): ");
+                    int inKey = scanner.nextInt();
+                    scanner.nextLine(); 
+                    System.out.print("Masukkan Value (String): ");
+                    String inVal = scanner.nextLine();
+                    ht.insert(inKey, inVal);
                     break;
-
                 case 2:
-                    System.out.print("Masukkan angka yang ingin dihapus: ");
-                    int deleteData = input.nextInt();
-                    hashTable.delete(deleteData);
+                    System.out.print("Masukkan Key yang ingin dihapus: ");
+                    int delKey = scanner.nextInt();
+                    ht.delete(delKey);
                     break;
-
                 case 3:
-                    System.out.print("Masukkan angka yang dicari: ");
-                    int searchData = input.nextInt();
-
-                    int result = hashTable.search(searchData);
-
-                    if (result != -1) {
-                        System.out.println("Data ditemukan pada index " + result);
-                    } else {
-                        System.out.println("Data tidak ditemukan");
-                    }
-
+                    System.out.print("Masukkan Key yang ingin dicari: ");
+                    int searchKey = scanner.nextInt();
+                    ht.search(searchKey);
                     break;
-
                 case 4:
-                    hashTable.display();
+                    ht.display();
                     break;
-
                 case 5:
-                    input.nextLine();
-
-                    System.out.print("Masukkan nama file CSV: ");
-                    String filename = input.nextLine();
-
-                    hashTable.loadData(filename);
-                    break;
-
-                case 6:
                     System.out.println("Program selesai.");
-                    input.close();
-                    return;
-
+                    break;
                 default:
                     System.out.println("Pilihan tidak valid!");
             }
         }
+        scanner.close();
     }
 }
