@@ -1,38 +1,42 @@
 ﻿# Hash Table (Java & Python)
 
-Repository ini berisi implementasi **Hash Table** menggunakan teknik **Open Addressing (Linear Probing)** dengan dukungan operasi:
-**insert, delete (tombstone), search, dan display**, serta **load data dari CSV** (kolom `id`).
+## Fitur Program
+====================================================== <br>
+=========== [LOAD DATA RANDOM DAN COLLISION DATA] ============ <br>
+=== 100 Data awal berhasil dimasukkan ke dalam Hash Table! === <br>
 
-## Resume Program Java dan Python
-
-### 1) Program Hash Table — Java
-- Lokasi: `java/Main.java` (kelas `HashTable` + menu interaktif `Main`)
-- Konsep:
-  - Hashing: `index = key % SIZE`
-  - Collision: **Linear Probing**
-  - Delete: **tombstone** (`DELETED = Integer.MIN_VALUE`) agar proses `search()` tetap meneruskan probing
-- Fitur tambahan: load data dari CSV via `loadData(String path)` (contoh: `java/data_numerik.csv`)
-
-### 2) Program Hash Table — Python
-- Lokasi: `python/hash.py`
-- Konsep:
-  - Hashing: `index = key % size`
-  - Collision: **Linear Probing**
-  - Delete: **tombstone** (`DELETED = "__DELETED__"`) agar `search()` tidak berhenti terlalu awal
-- Fitur tambahan: load data dari CSV/Excel berdasarkan kolom `id` (contoh: `python/data_numerik.csv`)
-
-## Persamaan Utama (Keduanya)
-- Menggunakan **Open Addressing + Linear Probing** untuk menangani collision.
-- Menggunakan **tombstone** pada operasi delete agar pencarian tetap benar.
-- Menyediakan **menu interaktif** dan **load data dari CSV**.
+=== MENU HASH TABLE (PYTHON) ===
+1. Input Data Baru
+2. Hapus Data
+3. Cari Data
+4. Tampilkan Tabel (Visualisasi Chain)
+5. Keluar
+Pilih menu: 
 
 ## Struktur Folder
 - `java/` → implementasi Java
 - `python/` → implementasi Python
 
+## Cara Menjalankan Kode Program
+
+Bahasa Pemrograman Python
+
+```python
+    python hash.py
+```
+
+Bahasa Pemrograman Java
+
+```java
+    javac *.java
+    java Main
+```
+
+
 ## Dokumentasi Video Demo Program
-- 
-- 
+1. Java dan Python
+   [![Demo Project Hash Java dan Python]](https://youtu.be/e_USQ6O5y4I)
+
 
 
 
